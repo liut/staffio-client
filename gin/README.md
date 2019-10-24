@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	staffiogin "github.com/liut/staffio/client/gin"
+	staffiogin "github.com/liut/staffio-client/gin"
 )
 
 func main() {

@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"net/http"
 
-	staffio "github.com/liut/staffio/client"
+	staffio "github.com/liut/staffio-client"
 )
 
 func main() {
