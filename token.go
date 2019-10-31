@@ -43,7 +43,7 @@ func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	client := conf.Client(oauth2.NoContext, tok)
 	uri := infoURI
 	if len(roles) > 0 {
-		uri = infoURI + "+" + strings.Join(roles, "+")
+		uri = infoURI + "|" + strings.Join(roles, "|")
 	}
 	info, err := client.Get(uri)
 	if err != nil {
@@ -68,7 +68,7 @@ func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	var token = &InfoToken{}
 	err = json.Unmarshal(data, token)
 	if err != nil {
-		log.Printf("unmarshal to infoToken err %s", err)
+		log.Printf("unmarshal to infoToken err %s, data %s", err, data)
 		return nil, err
 	}
 	return token, nil
