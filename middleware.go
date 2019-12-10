@@ -13,6 +13,7 @@ import (
 )
 
 type User = auth.User
+type OptFunc = auth.OptFunc
 
 var (
 	ErrNoToken = errors.New("oauth2 token not found")
@@ -23,6 +24,10 @@ var (
 
 	UserFromRequest = auth.UserFromRequest
 	UserFromContext = auth.UserFromContext
+
+	WithURI     = auth.WithURI
+	WithRefresh = auth.WithRefresh
+	Middleware  = auth.Middleware
 )
 
 type ctxKey int
@@ -42,9 +47,9 @@ func SetAdminPath(path string) {
 // AuthMiddleware ...
 func AuthMiddleware(redirect bool) func(next http.Handler) http.Handler {
 	if redirect {
-		return auth.WithRedirect(LoginPath)
+		return auth.Middleware(auth.WithURI(LoginPath))
 	}
-	return auth.WithUnauthorized()
+	return auth.Middleware()
 }
 
 // AuthCodeCallback Handler for Check auth with role[s] when auth-code callback
