@@ -18,8 +18,8 @@ github.com/icza/mighty v0.0.0-20180919140131-cfd07d671de6/go.mod h1:xQig96I1VNBD
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.7 h1:KfgG9LzI+pYjr4xvmz/5H4FXjokeP+rlHLhv3iH62Fo=
 github.com/json-iterator/go v1.1.7/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
-github.com/liut/simpauth v0.0.1 h1:8yK8XuuiwV2KwxtXa967UiNzDZHecWxF/hzMcbUb3HY=
-github.com/liut/simpauth v0.0.1/go.mod h1:/PRdSN5nPTVPvUK+xLKxWTSZeM81KBG6nWy0ojpam9U=
+github.com/liut/simpauth v0.1.0 h1:CABvIgtHSmWOf/dvv/Z9DMfXzMOWRQh0ZbXeSvSMnRs=
+github.com/liut/simpauth v0.1.0/go.mod h1:/PRdSN5nPTVPvUK+xLKxWTSZeM81KBG6nWy0ojpam9U=
 github.com/mattn/go-isatty v0.0.7/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/mattn/go-isatty v0.0.9 h1:d5US/mDsogSGW37IV293h//ZFaeajb69h+EHFsv2xGg=
 github.com/mattn/go-isatty v0.0.9/go.mod h1:YNRxwqDuOph6SZLI9vUUz6OYw3QyUt7WiY2yME+cCiQ=
