@@ -16,6 +16,7 @@ const (
 
 // User ...
 type User = staffio.User
+type Option = staffio.Option
 
 // vars
 var (
@@ -34,12 +35,24 @@ func AuthMiddleware(redirect bool) gin.HandlerFunc {
 
 // Middleware ...
 func Middleware(opts ...staffio.OptFunc) gin.HandlerFunc {
-	mw := staffio.Middleware(opts...)
+	option := staffio.NewOption(opts...)
 	return func(c *gin.Context) {
-		mw(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// c.Request = r
-			c.Next()
-		})).ServeHTTP(c.Writer, c.Request)
+		user, err := staffio.UserFromRequest(c.Request)
+		if err != nil {
+			if option.URI != "" {
+				c.Redirect(http.StatusFound, option.URI)
+			} else {
+				c.AbortWithStatus(http.StatusUnauthorized)
+			}
+			return
+		}
+		if option.Refresh && user.NeedRefresh() {
+			user.Refresh()
+			user.Signin(c.Writer) // TODO: custom cookieName somethings
+		}
+		req := c.Request
+		c.Request = req.WithContext(staffio.ContextWithUser(req.Context(), user))
+		c.Next()
 	}
 }
 

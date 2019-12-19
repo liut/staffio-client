@@ -8,7 +8,7 @@ require (
 	github.com/go-osin/session v2.1.0+incompatible
 	github.com/icza/mighty v0.0.0-20180919140131-cfd07d671de6 // indirect
 	github.com/json-iterator/go v1.1.7 // indirect
-	github.com/liut/simpauth v0.1.0
+	github.com/liut/simpauth v0.1.1
 	github.com/mattn/go-isatty v0.0.9 // indirect
 	github.com/philhofer/fwd v1.0.0 // indirect
 	github.com/tinylib/msgp v1.1.0 // indirect

@@ -14,6 +14,7 @@ import (
 
 type User = auth.User
 type OptFunc = auth.OptFunc
+type Option = auth.Option
 
 var (
 	ErrNoToken = errors.New("oauth2 token not found")
@@ -24,10 +25,12 @@ var (
 
 	UserFromRequest = auth.UserFromRequest
 	UserFromContext = auth.UserFromContext
+	ContextWithUser = auth.ContextWithUser
 
 	WithURI     = auth.WithURI
 	WithRefresh = auth.WithRefresh
 	Middleware  = auth.Middleware
+	NewOption   = auth.NewOption
 )
 
 type ctxKey int
