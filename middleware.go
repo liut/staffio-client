@@ -23,6 +23,8 @@ var (
 	AdminPath = "/admin/"
 	LoginPath = "/auth/login"
 
+	Signout = auth.Signout
+
 	UserFromRequest = auth.UserFromRequest
 	UserFromContext = auth.UserFromContext
 	ContextWithUser = auth.ContextWithUser
@@ -71,6 +73,7 @@ func AuthCodeCallback(roleName ...string) http.Handler {
 		}
 		user.Refresh()
 		auth.Signin(user, w)
+		stateUnset(w)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Refresh", fmt.Sprintf("0; %s", AdminPath))
 		w.WriteHeader(http.StatusAccepted)

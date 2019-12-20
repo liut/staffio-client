@@ -69,14 +69,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fakeUser := &User{Name: randToken()}
 	fakeUser.Refresh()
 	state, _ := fakeUser.Encode()
-	http.SetCookie(w, &http.Cookie{
-		Name:     cKeyState,
-		Value:    state,
-		Path:     "/",
-		HttpOnly: true,
-	})
-	// g6F1oKFu2SxkalR3cms5dkIxSW1KcmppWUFxOThnNUlBS0lFNE5EV1VpUkgzMVdxc1VBPaFo0luyTHg
-	// g6F1oKFusDZVa0J6MDNVLTZ1Q2lKN1ShaNJbsldv
+	stateSet(w, state)
 	sess := SessionLoad(r)
 	sess.Set(cKeyState, state)
 	SessionSave(sess, w)
@@ -84,6 +77,30 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("refresh", fmt.Sprintf("1; %s", location))
 	w.Write([]byte("<html><title>Staffio</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
 		location + "'><button style='font-size: 14px;'> Login with Staffio! </button></a></body></html>"))
+}
+
+// LogoutHandler ...
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	Signout(w)
+}
+
+func stateSet(w http.ResponseWriter, state string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     cKeyState,
+		Value:    state,
+		Path:     "/",
+		HttpOnly: true,
+	})
+}
+
+func stateUnset(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     cKeyState,
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
+	})
 }
 
 func GetAuthCodeURL(state string) string {
