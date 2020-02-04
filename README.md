@@ -60,4 +60,27 @@ func Middleware(opts ...staffio.OptFunc) gin.HandlerFunc {
 	}
 }
 
+// UserFromContext for gin
+func UserFromContext(c *gin.Context) (user *User, ok bool) {
+	return staffio.UserFromContext(c.Request.Context())
+}
+
+// AuthCodeCallback for gin handler which for Check auth with role[s] when auth-code callback
+func AuthCodeCallback(roleName ...string) gin.HandlerFunc {
+	return gin.WrapH(staffio.AuthCodeCallback(roleName...))
+}
+
+
+// HandlerShowMe for gin
+func HandlerShowMe(c *gin.Context) {
+	user, ok := staffio.UserFromContext(c.Request.Context())
+	if !ok {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"me":    user,
+	})
+}
+
 ```
