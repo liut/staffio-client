@@ -70,9 +70,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fakeUser.Refresh()
 	state, _ := fakeUser.Encode()
 	stateSet(w, state)
-	sess := SessionLoad(r)
-	sess.Set(cKeyState, state)
-	SessionSave(sess, w)
 	location := GetAuthCodeURL(state)
 	w.Header().Set("refresh", fmt.Sprintf("1; %s", location))
 	w.Write([]byte("<html><title>Staffio</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
@@ -82,6 +79,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 // LogoutHandler ...
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	Signout(w)
+}
+
+func stateGet(r *http.Request) string {
+	if c, err := r.Cookie(cKeyState); err == nil {
+		return c.Value
+	}
+	return ""
 }
 
 func stateSet(w http.ResponseWriter, state string) {

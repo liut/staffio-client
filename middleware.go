@@ -87,15 +87,7 @@ func AuthCodeCallback(roleName ...string) http.Handler {
 func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// verify state value.
-		sess := SessionLoad(r)
-		var state string
-		v := sess.Get(cKeyState)
-		if v == nil {
-			log.Printf("last state not found: %s", cKeyState)
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-		state = v.(string)
+		state := stateGet(r)
 		if state != r.FormValue("state") {
 			log.Printf("Invalid state at %s:\n%s\n%s", r.RequestURI, state, r.FormValue("state"))
 			w.WriteHeader(http.StatusUnauthorized)
@@ -111,7 +103,6 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 		}
 
 		// log.Printf("exchanged token: %s", tok)
-		sess.Set(cKeyToken, tok.AccessToken)
 
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, TokenKey, tok)

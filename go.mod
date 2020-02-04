@@ -4,9 +4,7 @@ go 1.12
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-osin/session v2.1.0+incompatible
 	github.com/golang/protobuf v1.3.1 // indirect
-	github.com/icza/mighty v0.0.0-20180919140131-cfd07d671de6 // indirect
 	github.com/liut/simpauth v0.1.2
 	github.com/philhofer/fwd v1.0.0 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
