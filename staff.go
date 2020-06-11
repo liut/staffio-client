@@ -1,5 +1,12 @@
 package client
 
+// IStaff ...
+type IStaff interface {
+	GetUID() string  // uid
+	GetName() string // nickname
+	GetAvatar() string
+}
+
 // Staff is a retrieved employee struct.
 type Staff struct {
 	UID            string `json:"uid" form:"uid"`                     // 登录名

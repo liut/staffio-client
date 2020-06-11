@@ -8,13 +8,7 @@ import (
 	"net/http"
 
 	"golang.org/x/oauth2"
-
-	auth "github.com/liut/simpauth"
 )
-
-type User = auth.User
-type OptFunc = auth.OptFunc
-type Option = auth.Option
 
 var (
 	ErrNoToken = errors.New("oauth2 token not found")
@@ -22,17 +16,6 @@ var (
 
 	AdminPath = "/admin/"
 	LoginPath = "/auth/login"
-
-	Signout = auth.Signout
-
-	UserFromRequest = auth.UserFromRequest
-	UserFromContext = auth.UserFromContext
-	ContextWithUser = auth.ContextWithUser
-
-	WithURI     = auth.WithURI
-	WithRefresh = auth.WithRefresh
-	Middleware  = auth.Middleware
-	NewOption   = auth.NewOption
 )
 
 type ctxKey int
@@ -43,6 +26,7 @@ const (
 
 func SetLoginPath(path string) {
 	LoginPath = path
+	WithURI(path)
 }
 
 func SetAdminPath(path string) {
@@ -52,27 +36,39 @@ func SetAdminPath(path string) {
 // AuthMiddleware ...
 func AuthMiddleware(redirect bool) func(next http.Handler) http.Handler {
 	if redirect {
-		return auth.Middleware(auth.WithURI(LoginPath))
+		WithURI(LoginPath)
+		return authoriz.MiddlewareWordy(true)
 	}
-	return auth.Middleware()
+	return authoriz.Middleware()
 }
 
 // AuthCodeCallback Handler for Check auth with role[s] when auth-code callback
-func AuthCodeCallback(roleName ...string) http.Handler {
+func AuthCodeCallback(roles ...string) http.Handler {
+	cc := &CodeCallback{InRoles: roles}
+	return cc.Handler()
+}
+
+// CodeCallback ..
+type CodeCallback struct {
+	InRoles  []string
+	TokenGot TokenFunc
+}
+
+// Handler ...
+func (cc *CodeCallback) Handler() http.Handler {
+	tf := cc.TokenGot
+	if tf == nil {
+		tf = getToken
+	}
 	hf := func(w http.ResponseWriter, r *http.Request) {
-		it, err := AuthRequestWithRole(r, roleName...)
+		it, err := AuthRequestWithRole(r, cc.InRoles...)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			log.Printf("auth with role %v ERR %s", roleName, err)
+			log.Printf("auth with role %v ERR %s", cc.InRoles, err)
 			return
 		}
 
-		user := &User{
-			UID:  it.Me.UID,
-			Name: it.Me.Nickname,
-		}
-		user.Refresh()
-		auth.Signin(user, w)
+		authoriz.Signin(tf(it), w)
 		stateUnset(w)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Refresh", fmt.Sprintf("0; %s", AdminPath))
@@ -101,8 +97,6 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
-		// log.Printf("exchanged token: %s", tok)
 
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, TokenKey, tok)
@@ -150,4 +144,18 @@ func AuthRequestWithRole(r *http.Request, role ...string) (it *InfoToken, err er
 	}
 
 	return
+}
+
+// TokenFunc ...
+type TokenFunc func(it *InfoToken) UserEncoder
+
+func getToken(it *InfoToken) UserEncoder {
+	user := &User{
+		UID:    it.Me.UID,
+		Name:   it.Me.Nickname,
+		Avatar: it.Me.AvatarPath,
+		Roles:  it.Roles,
+	}
+	user.Refresh()
+	return user
 }

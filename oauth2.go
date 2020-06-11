@@ -36,7 +36,7 @@ func init() {
 		log.Print("Warning: STAFFIO_CLIENT_ID or STAFFIO_CLIENT_SECRET not found in environment")
 	}
 	infoURI = fmt.Sprintf("%s/%s", prefix, "info/me")
-	redirectURL := envOr("STAFFIO_REDIRECT_URL", "")
+	redirectURL := envOr("STAFFIO_REDIRECT_URL", "/auth/callback")
 	scopes := strings.Split(envOr("STAFFIO_SCOPES", ""), ",")
 	if clientID != "" && clientSecret != "" {
 		Setup(redirectURL, clientID, clientSecret, scopes)
@@ -49,6 +49,7 @@ func randToken() string {
 	return base64.URLEncoding.EncodeToString(b)
 }
 
+// GetOAuth2Config deprecated
 func GetOAuth2Config() *oauth2.Config {
 	return conf
 }
@@ -70,7 +71,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fakeUser.Refresh()
 	state, _ := fakeUser.Encode()
 	stateSet(w, state)
-	location := GetAuthCodeURL(state)
+	var location string
+	if strings.HasPrefix(conf.RedirectURL, "/") {
+		location = conf.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", getScheme(r)+"://"+r.Host+conf.RedirectURL))
+	} else {
+		location = conf.AuthCodeURL(state)
+	}
+
 	w.Header().Set("refresh", fmt.Sprintf("1; %s", location))
 	w.Write([]byte("<html><title>Staffio</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
 		location + "'><button style='font-size: 14px;'> Login with Staffio! </button></a></body></html>"))
@@ -107,14 +114,17 @@ func stateUnset(w http.ResponseWriter) {
 	})
 }
 
-func GetAuthCodeURL(state string) string {
-	return conf.AuthCodeURL(state)
-}
-
 func envOr(key, dft string) string {
 	v := os.Getenv(key)
 	if v == "" {
 		return dft
 	}
 	return v
+}
+
+func getScheme(r *http.Request) string {
+	if r.TLS != nil || r.URL.Scheme == "https" || r.Header.Get("X-Forwarded-Proto") == "https" {
+		return "https"
+	}
+	return "http"
 }
