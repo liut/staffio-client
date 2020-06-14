@@ -73,7 +73,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	stateSet(w, state)
 	var location string
 	if strings.HasPrefix(conf.RedirectURL, "/") {
-		location = conf.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", getScheme(r)+"://"+r.Host+conf.RedirectURL))
+		location = conf.AuthCodeURL(state, getAuthCodeOption(r))
 	} else {
 		location = conf.AuthCodeURL(state)
 	}
@@ -120,6 +120,14 @@ func envOr(key, dft string) string {
 		return dft
 	}
 	return v
+}
+
+func getAuthCodeOption(r *http.Request) oauth2.AuthCodeOption {
+	return oauth2.SetAuthURLParam("redirect_uri", getRedirectURI(r))
+}
+
+func getRedirectURI(r *http.Request) string {
+	return getScheme(r) + "://" + r.Host + conf.RedirectURL
 }
 
 func getScheme(r *http.Request) string {
