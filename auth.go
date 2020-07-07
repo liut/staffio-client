@@ -31,12 +31,24 @@ var (
 
 func init() {
 	authoriz = auth.Default()
+	authoriz.With(auth.WithCookie(envOr("AUTH_COOKIE_NAME", "staff"),
+		envOr("AUTH_COOKIE_PATH", "/"), envOr("AUTH_COOKIE_DOMAIN", "")))
 }
 
 // Middleware ...
 func Middleware(opts ...auth.OptFunc) func(next http.Handler) http.Handler {
 	authoriz.With(opts...)
 	return authoriz.Middleware()
+}
+
+// MiddlewareWordy ...
+func MiddlewareWordy(redir bool) func(next http.Handler) http.Handler {
+	return authoriz.MiddlewareWordy(redir)
+}
+
+// Signin ...
+func Signin(user UserEncoder, w http.ResponseWriter) {
+	authoriz.Signin(user, w)
 }
 
 // Signout ...
@@ -59,8 +71,8 @@ func WithRefresh() auth.OptFunc {
 }
 
 // WithCookie ...
-func WithCookie(name, path, domain string) auth.OptFunc {
-	fn := auth.WithCookie(name, path, domain)
+func WithCookie(strs ...string) auth.OptFunc {
+	fn := auth.WithCookie(strs...)
 	authoriz.With(fn)
 	return fn
 }
