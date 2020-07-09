@@ -127,7 +127,10 @@ func getAuthCodeOption(r *http.Request) oauth2.AuthCodeOption {
 }
 
 func getRedirectURI(r *http.Request) string {
-	return getScheme(r) + "://" + r.Host + conf.RedirectURL
+	if strings.HasPrefix(conf.RedirectURL, "/") {
+		return getScheme(r) + "://" + r.Host + conf.RedirectURL
+	}
+	return conf.RedirectURL
 }
 
 func getScheme(r *http.Request) string {
