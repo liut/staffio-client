@@ -16,6 +16,10 @@ var (
 	tlscfg = &tls.Config{
 		InsecureSkipVerify: true,
 	}
+	httpClient = &http.Client{
+		Timeout:   9 * time.Second,
+		Transport: &http.Transport{TLSClientConfig: tlscfg},
+	}
 
 	ErrNoToken = errors.New("oauth2 token not found")
 	ErrNoRole  = errors.New("the user not in special roles")
@@ -96,8 +100,6 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 			w.Write([]byte("invalid state: " + state))
 			return
 		}
-		tr := &http.Transport{TLSClientConfig: tlscfg}
-		httpClient := &http.Client{Timeout: 9 * time.Second, Transport: tr}
 		ctxEx := context.WithValue(context.Background(), oauth2.HTTPClient, httpClient)
 
 		tok, err := conf.Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))

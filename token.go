@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -40,7 +41,8 @@ func (e *infoError) Error() string {
 
 // RequestInfoToken ...
 func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
-	client := conf.Client(oauth2.NoContext, tok)
+	ctxEx := context.WithValue(context.Background(), oauth2.HTTPClient, httpClient)
+	client := conf.Client(ctxEx, tok)
 	uri := infoURI
 	if len(roles) > 0 {
 		uri = infoURI + "|" + strings.Join(roles, "|")
