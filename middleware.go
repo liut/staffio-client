@@ -2,15 +2,21 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 )
 
 var (
+	tlscfg = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
 	ErrNoToken = errors.New("oauth2 token not found")
 	ErrNoRole  = errors.New("the user not in special roles")
 
@@ -90,8 +96,11 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 			w.Write([]byte("invalid state: " + state))
 			return
 		}
+		tr := &http.Transport{TLSClientConfig: tlscfg}
+		httpClient := &http.Client{Timeout: 9 * time.Second, Transport: tr}
+		ctxEx := context.WithValue(context.Background(), oauth2.HTTPClient, httpClient)
 
-		tok, err := conf.Exchange(oauth2.NoContext, r.FormValue("code"), getAuthCodeOption(r))
+		tok, err := conf.Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
 			log.Printf("oauth2 exchange ERR %s", err)
 			w.WriteHeader(http.StatusBadRequest)
