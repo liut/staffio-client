@@ -48,7 +48,7 @@ func MiddlewareWordy(redir bool) func(next http.Handler) http.Handler {
 
 // Signin ...
 func Signin(user UserEncoder, w http.ResponseWriter) {
-	authoriz.Signin(user, w)
+	_ = authoriz.Signin(user, w)
 }
 
 // Signout ...

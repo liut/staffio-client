@@ -48,7 +48,7 @@ func envName(k string) string {
 
 func randToken() string {
 	b := make([]byte, 12)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
 }
 
@@ -83,7 +83,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("refresh", fmt.Sprintf("1; %s", location))
 	title := envOr("AUTH_TITLE", "Staffio")
-	w.Write([]byte("<html><title>" + title + "</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
+	_, _ = w.Write([]byte("<html><title>" + title + "</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
 		location + "'><button style='font-size: 14px;'> Login with " + title + "! </button></a></body></html>"))
 }
 

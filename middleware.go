@@ -78,13 +78,12 @@ func (cc *CodeCallback) Handler() http.Handler {
 			return
 		}
 
-		authoriz.Signin(tf(it), w)
+		_ = authoriz.Signin(tf(it), w)
 		stateUnset(w)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Refresh", fmt.Sprintf("0; %s", AdminPath))
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("Login OK. Please waiting, ok click <a href=" + AdminPath + ">here</a> to go back"))
-		return
+		_, _ = w.Write([]byte("Login OK. Please waiting, ok click <a href=" + AdminPath + ">here</a> to go back"))
 	}
 	return AuthCodeCallbackWrap(http.HandlerFunc(hf))
 }
@@ -97,7 +96,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 		if state != r.FormValue("state") {
 			log.Printf("Invalid state at %s:\n%s\n%s", r.RequestURI, state, r.FormValue("state"))
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("invalid state: " + state))
+			_, _ = w.Write([]byte("invalid state: " + state))
 			return
 		}
 		ctxEx := context.WithValue(context.Background(), oauth2.HTTPClient, httpClient)
