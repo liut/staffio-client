@@ -14,33 +14,36 @@ import (
 
 const (
 	cKeyState = "staffio_state"
-	cKeyToken = "staffio_token"
-	cKeyUser  = "staffio_user"
 )
 
 var (
 	conf           *oauth2.Config
 	oAuth2Endpoint oauth2.Endpoint
 	infoURI        string
+	envPrefix      = "OAUTH"
 )
 
 func init() {
-	prefix := envOr("STAFFIO_PREFIX", "https://staffio.work")
+	prefix := envOr(envName("PREFIX"), "https://staffio.work")
 	oAuth2Endpoint = oauth2.Endpoint{
-		AuthURL:  fmt.Sprintf("%s/%s", prefix, "authorize"),
-		TokenURL: fmt.Sprintf("%s/%s", prefix, "token"),
+		AuthURL:  fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_AUTHORIZE"), "authorize")),
+		TokenURL: fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_TOKEN"), "token")),
 	}
-	clientID := envOr("STAFFIO_CLIENT_ID", "")
-	clientSecret := envOr("STAFFIO_CLIENT_SECRET", "")
+	clientID := envOr(envName("CLIENT_ID"), "")
+	clientSecret := envOr(envName("CLIENT_SECRET"), "")
 	if clientID == "" || clientSecret == "" {
-		log.Print("Warning: STAFFIO_CLIENT_ID or STAFFIO_CLIENT_SECRET not found in environment")
+		log.Printf("Warning: %s_CLIENT_ID or %s_CLIENT_SECRET not found in environment", envPrefix, envPrefix)
 	}
-	infoURI = fmt.Sprintf("%s/%s", prefix, "info/me")
-	redirectURL := envOr("STAFFIO_REDIRECT_URL", "/auth/callback")
-	scopes := strings.Split(envOr("STAFFIO_SCOPES", ""), ",")
+	infoURI = fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_INFO"), "info"))
+	redirectURL := envOr(envName("REDIRECT_URL"), "/auth/callback")
+	scopes := strings.Split(envOr(envName("SCOPES"), ""), ",")
 	if clientID != "" && clientSecret != "" {
 		Setup(redirectURL, clientID, clientSecret, scopes)
 	}
+}
+
+func envName(k string) string {
+	return envPrefix + "_" + k
 }
 
 func randToken() string {
@@ -79,8 +82,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("refresh", fmt.Sprintf("1; %s", location))
-	w.Write([]byte("<html><title>Staffio</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
-		location + "'><button style='font-size: 14px;'> Login with Staffio! </button></a></body></html>"))
+	title := envOr("AUTH_TITLE", "Staffio")
+	w.Write([]byte("<html><title>" + title + "</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
+		location + "'><button style='font-size: 14px;'> Login with " + title + "! </button></a></body></html>"))
 }
 
 // LogoutHandler ...

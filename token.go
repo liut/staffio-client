@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
 	"time"
@@ -16,12 +15,15 @@ import (
 
 // InfoToken ...
 type InfoToken struct {
+	InfoError
+
 	AccessToken  string     `json:"access_token"`
 	TokenType    string     `json:"token_type,omitempty"`
 	RefreshToken string     `json:"refresh_token,omitempty"`
 	ExpiresIn    int64      `json:"expires_in,omitempty"`
 	Expiry       time.Time  `json:"expiry,omitempty"`
-	Me           Staff      `json:"me,omitempty"`
+	User         *User      `json:"user,omitempty"`
+	Me           *Staff     `json:"me,omitempty"`
 	Roles        auth.Names `json:"group,omitempty"`
 }
 
@@ -30,13 +32,13 @@ func (tok *InfoToken) GetExpiry() time.Time {
 	return time.Now().Add(time.Duration(tok.ExpiresIn) * time.Second)
 }
 
-type infoError struct {
-	Code    string `json:"error,omitempty"`
-	Message string `json:"error_description,omitempty"`
+type InfoError struct {
+	ErrCode    string `json:"error,omitempty"`
+	ErrMessage string `json:"error_description,omitempty"`
 }
 
-func (e *infoError) Error() string {
-	return fmt.Sprintf("%s: %s", e.Code, e.Message)
+func (e InfoError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrCode, e.ErrMessage)
 }
 
 // RequestInfoToken ...
@@ -52,26 +54,16 @@ func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 		return nil, err
 	}
 	defer info.Body.Close()
-	data, err := ioutil.ReadAll(info.Body)
+
+	var it = &InfoToken{}
+	err = json.NewDecoder(info.Body).Decode(it)
 	if err != nil {
-		log.Printf("read infoURI err %s", err)
+		log.Printf("unmarshal to infoToken err %s", err)
 		return nil, err
 	}
-
-	infoErr := &infoError{}
-	if e := json.Unmarshal(data, infoErr); e != nil {
-		return nil, e
+	if it.ErrCode != "" {
+		log.Printf("infoToken: %s", it.Error())
+		return nil, it
 	}
-
-	if infoErr.Code != "" {
-		return nil, infoErr
-	}
-
-	var token = &InfoToken{}
-	err = json.Unmarshal(data, token)
-	if err != nil {
-		log.Printf("unmarshal to infoToken err %s, data %s", err, data)
-		return nil, err
-	}
-	return token, nil
+	return it, nil
 }
