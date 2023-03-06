@@ -70,9 +70,7 @@ func Setup(redirectURL, clientID, clientSecret string, scopes []string) {
 
 // LoginHandler ...
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	fakeUser := &User{Name: randToken()}
-	fakeUser.Refresh()
-	state, _ := fakeUser.Encode()
+	state := randToken()
 	stateSet(w, state)
 	var location string
 	if strings.HasPrefix(conf.RedirectURL, "/") {
