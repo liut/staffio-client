@@ -58,7 +58,7 @@ func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	var it = &InfoToken{}
 	err = json.NewDecoder(info.Body).Decode(it)
 	if err != nil {
-		log.Printf("unmarshal to infoToken err %s", err)
+		log.Printf("unmarshal to infoToken err %s, %d, %s", err, info.StatusCode, uri)
 		return nil, err
 	}
 	if it.ErrCode != "" {

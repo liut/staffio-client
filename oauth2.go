@@ -34,7 +34,7 @@ func init() {
 	if clientID == "" || clientSecret == "" {
 		log.Printf("Warning: %s_CLIENT_ID or %s_CLIENT_SECRET not found in environment", envPrefix, envPrefix)
 	}
-	infoURI = fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_INFO"), "info"))
+	infoURI = fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_INFO"), "info/me"))
 	redirectURL := envOr(envName("REDIRECT_URL"), "/auth/callback")
 	scopes := strings.Split(envOr(envName("SCOPES"), ""), ",")
 	if clientID != "" && clientSecret != "" {
@@ -72,6 +72,7 @@ func Setup(redirectURL, clientID, clientSecret string, scopes []string) {
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	state := randToken()
 	stateSet(w, state)
+	log.Printf("state %s", state)
 	var location string
 	if strings.HasPrefix(conf.RedirectURL, "/") {
 		location = conf.AuthCodeURL(state, getAuthCodeOption(r))
@@ -93,6 +94,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func stateGet(r *http.Request) string {
 	if c, err := r.Cookie(cKeyState); err == nil {
 		return c.Value
+	} else {
+		log.Printf("get state fail: %s", err)
 	}
 	return ""
 }
