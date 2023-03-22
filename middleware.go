@@ -103,7 +103,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 
 		tok, err := conf.Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
-			log.Printf("oauth2 exchange ERR %s", err)
+			log.Printf("oauth2 exchange ERR %s, %q", err, oAuth2Endpoint.TokenURL)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -160,12 +160,14 @@ func AuthRequestWithRole(r *http.Request, role ...string) (it *InfoToken, err er
 type TokenFunc func(it *InfoToken) UserEncoder
 
 func getToken(it *InfoToken) UserEncoder {
-	user := &User{
-		UID:    it.Me.UID,
-		Name:   it.Me.Nickname,
-		Avatar: it.Me.AvatarPath,
-		Roles:  it.Roles,
+	user := new(User)
+	if it.Me != nil {
+		user.UID = it.Me.UID
+		user.Name = it.Me.Nickname
+		user.Avatar = it.Me.AvatarPath
 	}
+	user.Roles = it.Roles
+
 	user.Refresh()
 	return user
 }
