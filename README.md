@@ -1,8 +1,8 @@
-Staffio client
+Staffio client and general OAuth2 client
 ===
 
 
-Example
+Example for staffio SP
 ---
 
 ```go
