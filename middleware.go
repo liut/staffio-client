@@ -79,7 +79,8 @@ func (cc *CodeCallback) Handler() http.Handler {
 		}
 
 		_ = authoriz.Signin(tf(it), w)
-		stateUnset(w)
+		StateUnset(w)
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Refresh", fmt.Sprintf("0; %s", AdminPath))
 		w.WriteHeader(http.StatusAccepted)
@@ -92,7 +93,7 @@ func (cc *CodeCallback) Handler() http.Handler {
 func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		// verify state value.
-		state := stateGet(r)
+		state := StateGet(r)
 		if state != r.FormValue("state") {
 			log.Printf("Invalid state at %s:\n%s\n%s", r.RequestURI, state, r.FormValue("state"))
 			w.WriteHeader(http.StatusUnauthorized)

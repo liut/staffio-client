@@ -71,7 +71,7 @@ func Setup(redirectURL, clientID, clientSecret string, scopes []string) {
 // LoginHandler ...
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	state := randToken()
-	stateSet(w, state)
+	StateSet(w, state)
 	log.Printf("state %s", state)
 	var location string
 	if strings.HasPrefix(conf.RedirectURL, "/") {
@@ -91,7 +91,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	Signout(w)
 }
 
-func stateGet(r *http.Request) string {
+func StateGet(r *http.Request) string {
 	if c, err := r.Cookie(cKeyState); err == nil {
 		return c.Value
 	} else {
@@ -100,7 +100,7 @@ func stateGet(r *http.Request) string {
 	return ""
 }
 
-func stateSet(w http.ResponseWriter, state string) {
+func StateSet(w http.ResponseWriter, state string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     cKeyState,
 		Value:    state,
@@ -109,7 +109,7 @@ func stateSet(w http.ResponseWriter, state string) {
 	})
 }
 
-func stateUnset(w http.ResponseWriter) {
+func StateUnset(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     cKeyState,
 		Value:    "",
