@@ -41,25 +41,34 @@ func (e InfoError) Error() string {
 	return fmt.Sprintf("%s: %s", e.ErrCode, e.ErrMessage)
 }
 
-// RequestInfoToken ...
-func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
-	ctxEx := context.WithValue(context.Background(), oauth2.HTTPClient, httpClient)
+func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...string) error {
+	ctxEx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	client := conf.Client(ctxEx, tok)
 	uri := infoURI
-	if len(roles) > 0 {
-		uri = infoURI + "|" + strings.Join(roles, "|")
+	if len(parts) > 0 {
+		uri = infoURI + "|" + strings.Join(parts, "|")
 	}
-	info, err := client.Get(uri)
+	info, err := client.Post(uri, "", nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer info.Body.Close()
-
-	var it = &InfoToken{}
-	err = json.NewDecoder(info.Body).Decode(it)
+	err = json.NewDecoder(info.Body).Decode(obj)
 	if err != nil {
 		log.Printf("unmarshal to infoToken err %s, %d, %s", err, info.StatusCode, uri)
+		return err
+	}
+	return nil
+}
+
+// RequestInfoToken ...
+func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
+	it := new(InfoToken)
+	err := RequestInfo(context.Background(), tok, it, roles...)
+	if err != nil {
 		return nil, err
+	} else {
+		log.Printf("it %+v", it)
 	}
 	if it.ErrCode != "" {
 		log.Printf("infoToken: %s", it.Error())
