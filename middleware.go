@@ -104,7 +104,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 
 		tok, err := conf.Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
-			log.Printf("oauth2 exchange ERR %s, %q", err, oAuth2Endpoint.TokenURL)
+			log.Printf("oauth2 exchange ERR %s, %q", err, conf.Endpoint.TokenURL)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

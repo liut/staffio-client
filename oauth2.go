@@ -17,33 +17,47 @@ const (
 )
 
 var (
-	conf           *oauth2.Config
-	oAuth2Endpoint oauth2.Endpoint
-	infoURI        string
-	envPrefix      = "OAUTH"
+	conf      *oauth2.Config
+	infoURI   string
+	envPrefix = "OAUTH"
 )
 
 func init() {
 	prefix := envOr(envName("PREFIX"), "https://staffio.work")
-	oAuth2Endpoint = oauth2.Endpoint{
-		AuthURL:  fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_AUTHORIZE"), "authorize")),
-		TokenURL: fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_TOKEN"), "token")),
-	}
+
+	conf = &oauth2.Config{Endpoint: oauth2.Endpoint{
+		AuthURL:  fixURI(prefix, envOr(envName("URI_AUTHORIZE"), "authorize")),
+		TokenURL: fixURI(prefix, envOr(envName("URI_TOKEN"), "token")),
+	}}
 	clientID := envOr(envName("CLIENT_ID"), "")
 	clientSecret := envOr(envName("CLIENT_SECRET"), "")
 	if clientID == "" || clientSecret == "" {
 		log.Printf("Warning: %s_CLIENT_ID or %s_CLIENT_SECRET not found in environment", envPrefix, envPrefix)
+	} else {
+		SetupClient(clientID, clientSecret)
 	}
-	infoURI = fmt.Sprintf("%s/%s", prefix, envOr(envName("EP_INFO"), "info/me"))
-	redirectURL := envOr(envName("REDIRECT_URL"), "/auth/callback")
-	scopes := strings.Split(envOr(envName("SCOPES"), ""), ",")
-	if clientID != "" && clientSecret != "" {
-		Setup(redirectURL, clientID, clientSecret, scopes)
+
+	SetupRedirectURL(envOr(envName("REDIRECT_URL"), "/auth/callback"))
+
+	if scopes := strings.Split(envOr(envName("SCOPES"), ""), ","); len(scopes) > 0 {
+		SetupScopes(scopes)
 	}
+
+	infoURI = fixURI(prefix, envOr(envName("URI_INFO"), "info/me"))
 }
 
 func envName(k string) string {
 	return envPrefix + "_" + k
+}
+
+func fixURI(pre, s string) string {
+	if strings.HasPrefix(s, "https:") || strings.HasPrefix(s, "http:") {
+		return s
+	}
+	if strings.HasPrefix(s, "/") {
+		return pre + s
+	}
+	return pre + "/" + s
 }
 
 func randToken() string {
@@ -58,13 +72,19 @@ func GetOAuth2Config() *oauth2.Config {
 }
 
 // Setup oauth2 config
-func Setup(redirectURL, clientID, clientSecret string, scopes []string) {
-	conf = &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		RedirectURL:  redirectURL,
-		Scopes:       scopes,
-		Endpoint:     oAuth2Endpoint,
+func SetupClient(clientID, clientSecret string) {
+	if clientID != "" && clientSecret != "" {
+		conf.ClientID, conf.ClientSecret = clientID, clientSecret
+	}
+}
+func SetupRedirectURL(s string) {
+	if len(s) > 0 {
+		conf.RedirectURL = s
+	}
+}
+func SetupScopes(scopes []string) {
+	if len(scopes) > 0 {
+		conf.Scopes = scopes
 	}
 }
 

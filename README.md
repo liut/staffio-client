@@ -1,6 +1,20 @@
 Staffio client and general OAuth2 client
 ===
 
+settings with environment
+---
+```plan
+OAUTH_CLIENT_ID=
+OAUTH_CLIENT_SECRET=
+OAUTH_PREFIX=https://staffio.work
+OAUTH_URI_AUTHORIZE=/authorize
+OAUTH_URI_TOKEN=/token
+OAUTH_URI_INFO=/info/me
+OAUTH_REDIRECT_URL=/auth/callback
+OAUTH_SCOPES='openid'
+
+```
+
 
 Example for staffio SP
 ---
