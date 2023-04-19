@@ -72,7 +72,6 @@ func Setup(redirectURL, clientID, clientSecret string, scopes []string) {
 func LoginStart(w http.ResponseWriter, r *http.Request) string {
 	state := randToken()
 	StateSet(w, state)
-	log.Printf("state %s", state)
 
 	if strings.HasPrefix(conf.RedirectURL, "/") {
 		return conf.AuthCodeURL(state, getAuthCodeOption(r))
