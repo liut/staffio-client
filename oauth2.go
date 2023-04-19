@@ -68,8 +68,8 @@ func Setup(redirectURL, clientID, clientSecret string, scopes []string) {
 	}
 }
 
-// AuthStart generate state into cookie and return redirectURI
-func AuthStart(w http.ResponseWriter, r *http.Request) string {
+// LoginStart generate state into cookie and return redirectURI
+func LoginStart(w http.ResponseWriter, r *http.Request) string {
 	state := randToken()
 	StateSet(w, state)
 	log.Printf("state %s", state)
@@ -82,7 +82,7 @@ func AuthStart(w http.ResponseWriter, r *http.Request) string {
 
 // LoginHandler ...
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	location := AuthStart(w, r)
+	location := LoginStart(w, r)
 	w.Header().Set("refresh", fmt.Sprintf("1; %s", location))
 	title := envOr("AUTH_TITLE", "Staffio")
 	_, _ = w.Write([]byte("<html><title>" + title + "</title> <body style='padding: 2em;'> <p>Waiting...</p> <a href='" +
