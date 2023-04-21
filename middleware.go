@@ -79,7 +79,7 @@ func (cc *CodeCallback) Handler() http.Handler {
 		}
 
 		ue := tf(it)
-		log.Printf("callback ok, %v, %v", it, ue)
+		// log.Printf("callback ok, %v, %v", it, ue)
 		_ = authoriz.Signin(ue, w)
 		StateUnset(w)
 

@@ -53,6 +53,7 @@ func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...strin
 	}
 	info, err := client.Post(uri, "", nil)
 	if err != nil {
+		log.Printf("post info fail: %s, uri %q", err, uri)
 		return err
 	}
 	defer info.Body.Close()
@@ -70,11 +71,10 @@ func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	err := RequestInfo(context.Background(), tok, it, roles...)
 	if err != nil {
 		return nil, err
-	} else {
-		log.Printf("it %+v, user: %+v", it, it.User)
 	}
+
 	if err = it.GetError(); err != nil {
-		log.Printf("infoToken: %s", err)
+		log.Printf("infoToken has error: %s", err)
 		return nil, err
 	} else {
 		log.Printf("user: %+v", it.User)
