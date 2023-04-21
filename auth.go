@@ -16,7 +16,11 @@ type OptFunc = auth.OptFunc
 type Authorizer = auth.Authorizer
 
 // UserEncoder ...
-type UserEncoder = auth.Encoder
+type UserEncoder interface {
+	auth.Encoder
+	GetUID() string
+	GetName() string
+}
 
 // vars
 var (

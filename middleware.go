@@ -78,13 +78,18 @@ func (cc *CodeCallback) Handler() http.Handler {
 			return
 		}
 
-		_ = authoriz.Signin(tf(it), w)
+		ue := tf(it)
+		log.Printf("callback ok, %v, %v", it, ue)
+		_ = authoriz.Signin(ue, w)
 		StateUnset(w)
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Header().Set("Refresh", fmt.Sprintf("0; %s", AdminPath))
+		w.Header().Set("Refresh", fmt.Sprintf("2; %s", AdminPath))
 		w.WriteHeader(http.StatusAccepted)
-		_, _ = w.Write([]byte("Login OK. Please waiting, ok click <a href=" + AdminPath + ">here</a> to go back"))
+		out := fmt.Sprintf(
+			"Welcome back <b>%s</b>. Please waiting, or click <a href=%q>here</a> to go back",
+			ue.GetName(), AdminPath)
+		_, _ = w.Write([]byte(out))
 	}
 	return AuthCodeCallbackWrap(http.HandlerFunc(hf))
 }
@@ -104,7 +109,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 
 		tok, err := conf.Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
-			log.Printf("oauth2 exchange ERR %s, %q", err, conf.Endpoint.TokenURL)
+			log.Printf("oauth2 exchange fail: %s, %q", err, conf.Endpoint.TokenURL)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -166,6 +171,8 @@ func getToken(it *InfoToken) UserEncoder {
 		user.UID = it.Me.UID
 		user.Name = it.Me.Nickname
 		user.Avatar = it.Me.AvatarPath
+	} else if it.User != nil {
+		user = it.User
 	}
 	user.Roles = it.Roles
 

@@ -37,8 +37,11 @@ type InfoError struct {
 	ErrMessage string `json:"error_description,omitempty"`
 }
 
-func (e InfoError) Error() string {
-	return fmt.Sprintf("%s: %s", e.ErrCode, e.ErrMessage)
+func (e InfoError) GetError() error {
+	if len(e.ErrCode) > 0 {
+		return fmt.Errorf("%s: %s", e.ErrCode, e.ErrMessage)
+	}
+	return nil
 }
 
 func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...string) error {
@@ -68,11 +71,13 @@ func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	if err != nil {
 		return nil, err
 	} else {
-		log.Printf("it %+v", it)
+		log.Printf("it %+v, user: %+v", it, it.User)
 	}
-	if it.ErrCode != "" {
-		log.Printf("infoToken: %s", it.Error())
-		return nil, it
+	if err = it.GetError(); err != nil {
+		log.Printf("infoToken: %s", err)
+		return nil, err
+	} else {
+		log.Printf("user: %+v", it.User)
 	}
 	return it, nil
 }
