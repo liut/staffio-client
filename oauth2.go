@@ -12,10 +12,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	cKeyState = "staffio_state"
-)
-
 var (
 	conf      *oauth2.Config
 	infoURI   string
@@ -91,7 +87,7 @@ func SetupScopes(scopes []string) {
 // LoginStart generate state into cookie and return redirectURI
 func LoginStart(w http.ResponseWriter, r *http.Request) string {
 	state := randToken()
-	StateSet(w, state)
+	defaultStateStore.Save(w, state)
 
 	if strings.HasPrefix(conf.RedirectURL, "/") {
 		return conf.AuthCodeURL(state, getAuthCodeOption(r))
@@ -111,34 +107,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 // LogoutHandler ...
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	Signout(w)
-}
-
-func StateGet(r *http.Request) string {
-	if c, err := r.Cookie(cKeyState); err == nil {
-		return c.Value
-	} else {
-		log.Printf("get state fail: %s", err)
-	}
-	return ""
-}
-
-func StateSet(w http.ResponseWriter, state string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     cKeyState,
-		Value:    state,
-		Path:     "/",
-		HttpOnly: true,
-	})
-}
-
-func StateUnset(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     cKeyState,
-		Value:    "",
-		MaxAge:   -1,
-		Path:     "/",
-		HttpOnly: true,
-	})
 }
 
 func envOr(key, dft string) string {
