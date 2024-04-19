@@ -52,7 +52,7 @@ func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...strin
 	if len(parts) > 0 {
 		uri = infoURI + "|" + strings.Join(parts, "|")
 	}
-	info, err := client.Post(uri, "", nil)
+	info, err := client.Get(uri)
 	if err != nil {
 		slog.Info("post info fail", "err", err, "uri", "uri")
 		return err
