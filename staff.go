@@ -18,7 +18,7 @@ type Staff struct {
 	Gender         string `json:"gender,omitempty"`                   // 1=male, 2=female, 0=unknown
 	Mobile         string `json:"mobile,omitempty"`                   // cell phone number
 	Email          string `json:"email,omitempty"`
-	EmployeeNumber int    `json:"eid,omitempty" form:"eid"`
+	EmployeeNumber string `json:"eid,omitempty" form:"eid"`
 	EmployeeType   string `json:"etype,omitempty" form:"etitle"`
 	AvatarPath     string `json:"avatarPath,omitempty" form:"avatar"`
 	Provider       string `json:"provider,omitempty"`
