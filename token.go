@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -53,13 +54,13 @@ func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...strin
 	}
 	info, err := client.Post(uri, "", nil)
 	if err != nil {
-		log.Printf("post info fail: %s, uri %q", err, uri)
+		slog.Info("post info fail", "err", err, "uri", "uri")
 		return err
 	}
 	defer info.Body.Close()
 	err = json.NewDecoder(info.Body).Decode(obj)
 	if err != nil {
-		log.Printf("unmarshal to infoToken err %s, %d, %s", err, info.StatusCode, uri)
+		slog.Info("unmarshal to infoToken fail", "err", err, "sc", info.StatusCode, "uri", uri)
 		return err
 	}
 	return nil

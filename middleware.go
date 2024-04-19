@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -74,12 +74,11 @@ func (cc *CodeCallback) Handler() http.Handler {
 		it, err := AuthRequestWithRole(r, cc.InRoles...)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			log.Printf("auth with role %v ERR %s", cc.InRoles, err)
+			slog.Info("auth fail", "roles", cc.InRoles, "err", err)
 			return
 		}
 
 		ue := tf(it)
-		// log.Printf("callback ok, %v, %v", it, ue)
 		_ = authoriz.Signin(ue, w)
 		defaultStateStore.Wipe(w, r.FormValue("state"))
 
@@ -100,7 +99,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 		// verify state value.
 		state := r.FormValue("state")
 		if !defaultStateStore.Verify(r, state) {
-			log.Printf("Invalid state at %s:%s=%s", r.RequestURI, state, StateGet(r))
+			slog.Info("invalid", "stateF", state, "stateS", StateGet(r), "uri", r.RequestURI)
 			w.WriteHeader(http.StatusUnauthorized)
 			_, _ = w.Write([]byte("invalid state: " + state))
 			return
@@ -109,7 +108,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 
 		tok, err := conf.Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
-			log.Printf("oauth2 exchange fail: %s, %q", err, conf.Endpoint.TokenURL)
+			slog.Info("oauth2 exchange fail", "err", err, "euri", conf.Endpoint.TokenURL)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
