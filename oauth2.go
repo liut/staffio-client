@@ -19,27 +19,27 @@ var (
 )
 
 func init() {
-	prefix := envOr(envName("PREFIX"), "https://staffio.work")
+	prefix := envOrP("PREFIX", "https://staffio.work")
 
 	conf = &oauth2.Config{Endpoint: oauth2.Endpoint{
-		AuthURL:  fixURI(prefix, envOr(envName("URI_AUTHORIZE"), "authorize")),
-		TokenURL: fixURI(prefix, envOr(envName("URI_TOKEN"), "token")),
+		AuthURL:  fixURI(prefix, envOrP("URI_AUTHORIZE", "authorize")),
+		TokenURL: fixURI(prefix, envOrP("URI_TOKEN", "token")),
 	}}
-	clientID := envOr(envName("CLIENT_ID"), "")
-	clientSecret := envOr(envName("CLIENT_SECRET"), "")
+	clientID := envOrP("CLIENT_ID", "")
+	clientSecret := envOrP("CLIENT_SECRET", "")
 	if clientID == "" || clientSecret == "" {
 		log.Printf("Warning: %s_CLIENT_ID or %s_CLIENT_SECRET not found in environment", envPrefix, envPrefix)
 	} else {
 		SetupClient(clientID, clientSecret)
 	}
 
-	SetupRedirectURL(envOr(envName("REDIRECT_URL"), "/auth/callback"))
+	SetupRedirectURL(envOrP("REDIRECT_URL", "/auth/callback"))
 
-	if scopes := strings.Split(envOr(envName("SCOPES"), ""), ","); len(scopes) > 0 {
+	if scopes := strings.Split(envOrP("SCOPES", ""), ","); len(scopes) > 0 {
 		SetupScopes(scopes)
 	}
 
-	infoURI = fixURI(prefix, envOr(envName("URI_INFO"), "info/me"))
+	infoURI = fixURI(prefix, envOrP("URI_INFO", "info/me"))
 }
 
 func envName(k string) string {
@@ -115,6 +115,16 @@ func envOr(key, dft string) string {
 		return dft
 	}
 	return v
+}
+
+func envOrP(key, dft string) string {
+	if v := envOr(envName(key), dft); len(v) > 0 {
+		return v
+	}
+	if v := envOr("STAFFIO_"+key, dft); len(v) > 0 {
+		return v
+	}
+	return envOr(key, dft)
 }
 
 func getAuthCodeOption(r *http.Request) oauth2.AuthCodeOption {
