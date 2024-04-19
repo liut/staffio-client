@@ -87,7 +87,7 @@ func SetupScopes(scopes []string) {
 // LoginStart generate state into cookie and return redirectURI
 func LoginStart(w http.ResponseWriter, r *http.Request) string {
 	state := randToken()
-	defaultStateStore.Save(w, state)
+	_ = defaultStateStore.Save(w, state)
 
 	if strings.HasPrefix(conf.RedirectURL, "/") {
 		return conf.AuthCodeURL(state, getAuthCodeOption(r))

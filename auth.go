@@ -75,8 +75,8 @@ func WithRefresh() auth.OptFunc {
 }
 
 // WithCookie ...
-func WithCookie(strs ...string) auth.OptFunc {
-	fn := auth.WithCookie(strs...)
+func WithCookie(name string, strs ...string) auth.OptFunc {
+	fn := auth.WithCookie(name, strs...)
 	authoriz.With(fn)
 	return fn
 }
