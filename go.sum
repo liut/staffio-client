@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
-github.com/liut/simpauth v0.1.11 h1:Cp11oFvGV3XhW3Vyu8Fv7Kc43eVDfrZA10riEO1kVQg=
-github.com/liut/simpauth v0.1.11/go.mod h1:tUsA0/zl2Dg7v2WQsHKdQlSOjq8vKMhsX0p8y3lbXss=
+github.com/liut/simpauth v0.1.12 h1:pKgYfHWiZaeCvjnvrlhhbtQ0ftEZhWHzeiUff9yOHro=
+github.com/liut/simpauth v0.1.12/go.mod h1:tUsA0/zl2Dg7v2WQsHKdQlSOjq8vKMhsX0p8y3lbXss=
 github.com/philhofer/fwd v1.1.2 h1:bnDivRJ1EWPjUIRXV5KfORO897HTbpFAQddBdE8t7Gw=
 github.com/philhofer/fwd v1.1.2/go.mod h1:qkPdfjR2SIEbspLqpe1tO4n5yICnr2DY7mqEx2tUTP0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
