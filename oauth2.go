@@ -118,10 +118,10 @@ func envOr(key, dft string) string {
 }
 
 func envOrP(key, dft string) string {
-	if v := envOr(envName(key), dft); len(v) > 0 {
+	if v, ok := os.LookupEnv(envName(key)); ok && len(v) > 0 {
 		return v
 	}
-	if v := envOr("STAFFIO_"+key, dft); len(v) > 0 {
+	if v, ok := os.LookupEnv("STAFFIO_" + key); ok && len(v) > 0 {
 		return v
 	}
 	return envOr(key, dft)
