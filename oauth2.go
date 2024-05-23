@@ -4,42 +4,49 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"golang.org/x/oauth2"
 )
 
 var (
-	conf      *oauth2.Config
+	conf2     *oauth2.Config
+	cOnce     sync.Once
+	prefix    string
 	infoURI   string
 	envPrefix = "OAUTH"
 )
 
 func init() {
 	prefix := envOrP("PREFIX", "https://staffio.work")
-
-	conf = &oauth2.Config{Endpoint: oauth2.Endpoint{
-		AuthURL:  fixURI(prefix, envOrP("URI_AUTHORIZE", "authorize")),
-		TokenURL: fixURI(prefix, envOrP("URI_TOKEN", "token")),
-	}}
-	clientID := envOrP("CLIENT_ID", "")
-	clientSecret := envOrP("CLIENT_SECRET", "")
-	if clientID == "" || clientSecret == "" {
-		log.Printf("Warning: %s_CLIENT_ID or %s_CLIENT_SECRET not found in environment", envPrefix, envPrefix)
-	} else {
-		SetupClient(clientID, clientSecret)
-	}
-
-	SetupRedirectURL(envOrP("REDIRECT_URL", "/auth/callback"))
-
-	if scopes := strings.Split(envOrP("SCOPES", ""), ","); len(scopes) > 0 {
-		SetupScopes(scopes)
-	}
-
 	infoURI = fixURI(prefix, envOrP("URI_INFO", "info/me"))
+}
+
+func confSgt() *oauth2.Config {
+	cOnce.Do(func() {
+		conf2 = &oauth2.Config{Endpoint: oauth2.Endpoint{
+			AuthURL:  fixURI(prefix, envOrP("URI_AUTHORIZE", "authorize")),
+			TokenURL: fixURI(prefix, envOrP("URI_TOKEN", "token")),
+		}}
+		clientID := envOrP("CLIENT_ID", "")
+		clientSecret := envOrP("CLIENT_SECRET", "")
+		if clientID == "" || clientSecret == "" {
+			slog.Warn(envPrefix + "_CLIENT_ID or " + envPrefix + "_CLIENT_SECRET not found in environment")
+		} else {
+			SetupClient(conf2, clientID, clientSecret)
+		}
+
+		SetupRedirectURL(conf2, envOrP("REDIRECT_URL", "/auth/callback"))
+
+		if scopes := strings.Split(envOrP("SCOPES", ""), ","); len(scopes) > 0 {
+			SetupScopes(conf2, scopes)
+		}
+	})
+	return conf2
 }
 
 func envName(k string) string {
@@ -62,23 +69,23 @@ func randToken() string {
 	return base64.URLEncoding.EncodeToString(b)
 }
 
-// GetOAuth2Config deprecated
+// GetOAuth2Config deprecated:
 func GetOAuth2Config() *oauth2.Config {
-	return conf
+	return confSgt()
 }
 
 // Setup oauth2 config
-func SetupClient(clientID, clientSecret string) {
+func SetupClient(conf *oauth2.Config, clientID, clientSecret string) {
 	if clientID != "" && clientSecret != "" {
 		conf.ClientID, conf.ClientSecret = clientID, clientSecret
 	}
 }
-func SetupRedirectURL(s string) {
+func SetupRedirectURL(conf *oauth2.Config, s string) {
 	if len(s) > 0 {
 		conf.RedirectURL = s
 	}
 }
-func SetupScopes(scopes []string) {
+func SetupScopes(conf *oauth2.Config, scopes []string) {
 	if len(scopes) > 0 {
 		conf.Scopes = scopes
 	}
@@ -89,10 +96,10 @@ func LoginStart(w http.ResponseWriter, r *http.Request) string {
 	state := randToken()
 	_ = defaultStateStore.Save(w, state)
 
-	if strings.HasPrefix(conf.RedirectURL, "/") {
-		return conf.AuthCodeURL(state, getAuthCodeOption(r))
+	if strings.HasPrefix(confSgt().RedirectURL, "/") {
+		return confSgt().AuthCodeURL(state, getAuthCodeOption(r))
 	}
-	return conf.AuthCodeURL(state)
+	return confSgt().AuthCodeURL(state)
 }
 
 // LoginHandler ...
@@ -132,10 +139,10 @@ func getAuthCodeOption(r *http.Request) oauth2.AuthCodeOption {
 }
 
 func getRedirectURI(r *http.Request) string {
-	if strings.HasPrefix(conf.RedirectURL, "/") {
-		return getScheme(r) + "://" + r.Host + conf.RedirectURL
+	if strings.HasPrefix(confSgt().RedirectURL, "/") {
+		return getScheme(r) + "://" + r.Host + confSgt().RedirectURL
 	}
-	return conf.RedirectURL
+	return confSgt().RedirectURL
 }
 
 func getScheme(r *http.Request) string {

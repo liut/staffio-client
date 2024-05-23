@@ -106,9 +106,9 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 		}
 		ctxEx := context.WithValue(context.Background(), oauth2.HTTPClient, httpClient)
 
-		tok, err := conf.Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
+		tok, err := confSgt().Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
-			slog.Info("oauth2 exchange fail", "err", err, "euri", conf.Endpoint.TokenURL)
+			slog.Info("oauth2 exchange fail", "err", err, "euri", confSgt().Endpoint.TokenURL)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

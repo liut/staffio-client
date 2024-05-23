@@ -1,7 +1,7 @@
 package client
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -44,7 +44,7 @@ func StateGet(r *http.Request) string {
 	if c, err := r.Cookie(cKeyState); err == nil {
 		return c.Value
 	} else {
-		log.Printf("get state fail: %s", err)
+		slog.Info("get state fail", "err", err)
 	}
 	return ""
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 	"strings"
 	"time"
@@ -47,7 +46,7 @@ func (e InfoError) GetError() error {
 
 func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...string) error {
 	ctxEx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
-	client := conf.Client(ctxEx, tok)
+	client := confSgt().Client(ctxEx, tok)
 	uri := infoURI
 	if len(parts) > 0 {
 		uri = infoURI + "|" + strings.Join(parts, "|")
@@ -75,10 +74,10 @@ func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	}
 
 	if err = it.GetError(); err != nil {
-		log.Printf("infoToken has error: %s", err)
+		slog.Info("infoToken has error ", "err", err)
 		return nil, err
 	} else {
-		log.Printf("user: %+v", it.User)
+		slog.Debug("infoToken", "user", it.User)
 	}
 	return it, nil
 }
