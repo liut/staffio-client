@@ -15,6 +15,12 @@ type OptFunc = auth.OptFunc
 // Authorizer ...
 type Authorizer = auth.Authorizer
 
+type IClient interface {
+	auth.Authorizer
+
+	LoginStart(w http.ResponseWriter, r *http.Request) string
+}
+
 // UserEncoder ...
 type UserEncoder interface {
 	auth.Encoder
