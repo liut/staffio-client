@@ -22,7 +22,7 @@ var (
 )
 
 func init() {
-	prefix := envOrP("PREFIX", "https://staffio.work")
+	prefix = envOrP("PREFIX", "https://staffio.work")
 	infoURI = fixURI(prefix, envOrP("URI_INFO", "info/me"))
 }
 
