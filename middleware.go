@@ -58,30 +58,45 @@ func AuthCodeCallback(roles ...string) http.Handler {
 	return cc.Handler()
 }
 
+// TokenFunc for custom read token
+type TokenFunc = func(ctx context.Context, w http.ResponseWriter, it *InfoToken)
+
+// UserFunc for custom read user
+type UserFunc = func(ctx context.Context, w http.ResponseWriter, user *User)
+
 // CodeCallback ..
 type CodeCallback struct {
-	InRoles  []string
-	TokenGot TokenFunc
+	InRoles []string
+	// When got a infoToken from the provider
+	OnTokenGot TokenFunc
+	// When Signed in
+	OnSignedIn UserFunc
 }
 
 // Handler ...
 func (cc *CodeCallback) Handler() http.Handler {
-	tf := cc.TokenGot
-	if tf == nil {
-		tf = getToken
-	}
 	hf := func(w http.ResponseWriter, r *http.Request) {
 		it, err := AuthRequestWithRole(r, cc.InRoles...)
 		if err != nil {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			slog.Info("auth fail", "roles", cc.InRoles, "err", err)
 			return
 		}
 
-		ue := tf(it)
+		if tf := cc.OnTokenGot; tf != nil {
+			tf(r.Context(), w, it)
+		}
+
+		ue := getToken(it)
 		_ = authoriz.Signin(ue, w)
+
 		defaultStateStore.Wipe(w, r.FormValue("state"))
 
+		if cc.OnSignedIn != nil {
+			cc.OnSignedIn(r.Context(), w, ue)
+			return
+		}
+		// redirect
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Refresh", fmt.Sprintf("2; %s", AdminPath))
 		w.WriteHeader(http.StatusAccepted)
@@ -100,20 +115,19 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 		state := r.FormValue("state")
 		if !defaultStateStore.Verify(r, state) {
 			slog.Info("invalid", "stateF", state, "stateS", StateGet(r), "uri", r.RequestURI)
-			w.WriteHeader(http.StatusUnauthorized)
-			_, _ = w.Write([]byte("invalid state: " + state))
+			http.Error(w, "invalid state: "+state, 400)
 			return
 		}
-		ctxEx := context.WithValue(context.Background(), oauth2.HTTPClient, httpClient)
+		ctx := r.Context()
+		ctxEx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 
 		tok, err := confSgt().Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
 			slog.Info("oauth2 exchange fail", "err", err, "euri", confSgt().Endpoint.TokenURL)
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "oauth2 exchange fail: "+err.Error(), 400)
 			return
 		}
 
-		ctx := r.Context()
 		ctx = context.WithValue(ctx, TokenKey, tok)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
@@ -142,12 +156,13 @@ func TokenFromContext(ctx context.Context) *oauth2.Token {
 
 // AuthRequestWithRole called in AuthCallback
 func AuthRequestWithRole(r *http.Request, role ...string) (it *InfoToken, err error) {
-	tok := TokenFromContext(r.Context())
+	ctx := r.Context()
+	tok := TokenFromContext(ctx)
 	if tok == nil {
 		err = ErrNoToken
 		return
 	}
-	it, err = RequestInfoToken(tok, role...)
+	it, err = RequestInfoToken(ctx, tok, role...)
 	if err != nil {
 		return
 	}
@@ -161,12 +176,10 @@ func AuthRequestWithRole(r *http.Request, role ...string) (it *InfoToken, err er
 	return
 }
 
-// TokenFunc ...
-type TokenFunc func(it *InfoToken) UserEncoder
-
-func getToken(it *InfoToken) UserEncoder {
+func getToken(it *InfoToken) *User {
 	user := new(User)
 	if it.Me != nil {
+		user.OID = it.Me.OID
 		user.UID = it.Me.UID
 		user.Name = it.Me.Nickname
 		user.Avatar = it.Me.AvatarPath

@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	github.com/liut/simpauth v0.1.14
+	github.com/liut/simpauth v0.1.15
 	golang.org/x/oauth2 v0.29.0
 )
 

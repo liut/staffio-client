@@ -20,7 +20,7 @@ type InfoToken struct {
 	AccessToken  string     `json:"access_token"`
 	TokenType    string     `json:"token_type,omitempty"`
 	RefreshToken string     `json:"refresh_token,omitempty"`
-	ExpiresIn    int64      `json:"expires_in,omitempty"`
+	ExpiresIn    int64      `json:"expires_in,omitempty"` // in seconds
 	Expiry       time.Time  `json:"expiry,omitempty"`
 	User         *User      `json:"user,omitempty"`
 	Me           *Staff     `json:"me,omitempty"`
@@ -66,9 +66,9 @@ func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...strin
 }
 
 // RequestInfoToken ...
-func RequestInfoToken(tok *oauth2.Token, roles ...string) (*InfoToken, error) {
+func RequestInfoToken(ctx context.Context, tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	it := new(InfoToken)
-	err := RequestInfo(context.Background(), tok, it, roles...)
+	err := RequestInfo(ctx, tok, it, roles...)
 	if err != nil {
 		return nil, err
 	}

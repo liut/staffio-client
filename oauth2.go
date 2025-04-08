@@ -21,6 +21,10 @@ var (
 	envPrefix = "OAUTH"
 )
 
+func GetPrefix() string {
+	return prefix
+}
+
 func init() {
 	prefix = envOrP("PREFIX", "https://staffio.work")
 	infoURI = fixURI(prefix, envOrP("URI_INFO", "info/me"))
@@ -67,11 +71,6 @@ func randToken() string {
 	b := make([]byte, 12)
 	_, _ = rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
-}
-
-// GetOAuth2Config deprecated:
-func GetOAuth2Config() *oauth2.Config {
-	return confSgt()
 }
 
 // Setup oauth2 config

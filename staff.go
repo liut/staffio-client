@@ -9,6 +9,7 @@ type IStaff interface {
 
 // Staff is a retrieved employee struct.
 type Staff struct {
+	OID            string `json:"oid,omitempty" form:"oid"`           // pk id, ojecct id
 	UID            string `json:"uid" form:"uid"`                     // 登录名
 	CommonName     string `json:"cn,omitempty" form:"cn"`             // 全名
 	GivenName      string `json:"gn,omitempty" form:"gn"`             // 名
@@ -24,7 +25,7 @@ type Staff struct {
 	Provider       string `json:"provider,omitempty"`
 }
 
-type RoleMe map[string]interface{}
+type RoleMe map[string]any
 
 func (r RoleMe) Has(name string) bool {
 	if v, exist := r[name]; exist {
