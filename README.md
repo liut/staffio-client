@@ -15,6 +15,16 @@ OAUTH_SCOPES='openid'
 
 ```
 
+User struct
+---
+```go
+type User struct {
+	OID       string `json:"oid,omitempty"` // pk id, objectID
+	UID       string `json:"uid"`           // username, login name
+	Name      string `json:"name"`          // nickname, realname, display name
+	Avatar    string `json:"avatar,omitempty"`
+}
+```
 
 Example for staffio SP
 ---
@@ -35,9 +45,32 @@ func main() {
 	staffio.SetLoginPath(loginPath)
 	staffio.SetAdminPath("/admin")
 
+	// login start
 	http.HandleFunc(loginPath, staffio.LoginHandler)
+	// default callback with role admin (role is optional)
 	http.Handle("/auth/callback", staffio.AuthCodeCallback("admin"))
 
+	// Or custom hook (ex: with chi)
+	router.Route("/auth", func(r chi.Router) {
+		r.Get("/login", staffio.LoginHandler)
+		r.Get("/logout", staffio.LogoutHandler)
+		handleTokenGot := func(ctx context.Context, w http.ResponseWriter, token *staffio.InfoToken) {
+			// read token.AccessToken
+			// write it into cookie or some db
+		}
+		handleSignedIn := func(ctx context.Context, w http.ResponseWriter, user *staffio.User) {
+			// read user
+			// write it into cookie or some db or response to frontend
+			// AND SHOULD redirect to the URI of user panel (if not in AJAX)
+		}
+		cc := &staffio.CodeCallback{
+			OnTokenGot: handleTokenGot,
+			OnSignedIn: handleSignedIn,
+		}
+		r.Method(http.MethodGet, "/callback", cc.Handler())
+	})
+
+	// use middleware
 	authF1 := staffio.Middleware()
 	authF1 := staffio.Middleware(staffio.WithRefresh()) // auto refresh token time
 	authF1 := staffio.Middleware(staffio.WithRefresh(), staffio.WithURI(loginPath)) // auto refresh and redirect
