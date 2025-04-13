@@ -3,6 +3,7 @@ package client
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -101,8 +102,30 @@ func LoginStart(w http.ResponseWriter, r *http.Request) string {
 	return confSgt().AuthCodeURL(state)
 }
 
+type AuthFormData struct {
+	ResponseType string `json:"response_type"`
+	ClientID     string `json:"client_id"`
+	RedirectURI  string `json:"redirect_uri"`
+	Scope        string `json:"scope"`
+	State        string `json:"state"`
+}
+
 // LoginHandler ...
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	if IsAjax(r) {
+		state := randToken()
+		_ = defaultStateStore.Save(w, state)
+		cc := confSgt()
+		data := AuthFormData{
+			ResponseType: "code",
+			ClientID:     cc.ClientID,
+			RedirectURI:  getRedirectURI(r),
+			Scope:        strings.Join(cc.Scopes, " "),
+			State:        state,
+		}
+		json.NewEncoder(w).Encode(map[string]any{"data": data}) //nolint
+		return
+	}
 	location := LoginStart(w, r)
 	w.Header().Set("refresh", fmt.Sprintf("1; %s", location))
 	title := envOr("AUTH_TITLE", "Staffio")
