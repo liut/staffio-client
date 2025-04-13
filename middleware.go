@@ -196,7 +196,10 @@ func getToken(it *InfoToken) *User {
 		user.Name = it.Me.Nickname
 		user.Avatar = it.Me.AvatarPath
 	} else if it.User != nil {
-		user = it.User
+		user = &it.User.User
+		if len(user.OID) == 0 && len(it.User.Sub) > 0 {
+			user.OID = it.User.Sub
+		}
 	}
 	user.Roles = it.Roles
 

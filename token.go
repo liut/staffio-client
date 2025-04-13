@@ -13,6 +13,14 @@ import (
 	auth "github.com/liut/simpauth"
 )
 
+// UserInfo for OAuth2
+type O2User struct {
+	// Subject - Identifier for the User at the `SP`.
+	// 主题 - `SP`对用户的标识符。
+	Sub string `json:"sub,omitempty"`
+	auth.User
+}
+
 // InfoToken ...
 type InfoToken struct {
 	InfoError
@@ -22,7 +30,7 @@ type InfoToken struct {
 	RefreshToken string     `json:"refresh_token,omitempty"`
 	ExpiresIn    int64      `json:"expires_in,omitempty"` // in seconds
 	Expiry       time.Time  `json:"expiry,omitempty"`
-	User         *User      `json:"user,omitempty"`
+	User         *O2User    `json:"user,omitempty"`
 	Me           *Staff     `json:"me,omitempty"`
 	Roles        auth.Names `json:"group,omitempty"`
 }
