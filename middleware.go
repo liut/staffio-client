@@ -99,7 +99,6 @@ func (cc *CodeCallback) Handler() http.Handler {
 			return
 		}
 
-		w.WriteHeader(http.StatusAccepted)
 		if IsAjax(r) {
 			ot := TokenFromContext(r.Context())
 			out := map[string]any{
@@ -112,6 +111,7 @@ func (cc *CodeCallback) Handler() http.Handler {
 		// redirect
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Refresh", fmt.Sprintf("2; %s", AdminPath))
+		w.WriteHeader(http.StatusAccepted)
 		out := fmt.Sprintf(
 			"Welcome back <b>%s</b>. Please waiting, or click <a href=%q>here</a> to go back",
 			ue.GetName(), AdminPath)
