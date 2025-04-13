@@ -3,10 +3,12 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -96,10 +98,20 @@ func (cc *CodeCallback) Handler() http.Handler {
 			cc.OnSignedIn(r.Context(), w, ue)
 			return
 		}
+
+		w.WriteHeader(http.StatusAccepted)
+		if IsAjax(r) {
+			ot := TokenFromContext(r.Context())
+			out := map[string]any{
+				"token": ot.AccessToken,
+				"user":  ue,
+			}
+			json.NewEncoder(w).Encode(out) //nolint
+			return
+		}
 		// redirect
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Refresh", fmt.Sprintf("2; %s", AdminPath))
-		w.WriteHeader(http.StatusAccepted)
 		out := fmt.Sprintf(
 			"Welcome back <b>%s</b>. Please waiting, or click <a href=%q>here</a> to go back",
 			ue.GetName(), AdminPath)
@@ -115,7 +127,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 		state := r.FormValue("state")
 		if !defaultStateStore.Verify(r, state) {
 			slog.Info("invalid", "stateF", state, "stateS", StateGet(r), "uri", r.RequestURI)
-			http.Error(w, "invalid state: "+state, 400)
+			http.Error(w, "invalid state: "+state, http.StatusBadRequest)
 			return
 		}
 		ctx := r.Context()
@@ -124,7 +136,7 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 		tok, err := confSgt().Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
 		if err != nil {
 			slog.Info("oauth2 exchange fail", "err", err, "euri", confSgt().Endpoint.TokenURL)
-			http.Error(w, "oauth2 exchange fail: "+err.Error(), 400)
+			http.Error(w, "oauth2 exchange fail: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -190,4 +202,17 @@ func getToken(it *InfoToken) *User {
 
 	user.Refresh()
 	return user
+}
+
+// IsAjax Check if is AJAX Request for json data
+func IsAjax(r *http.Request) bool {
+	if acceptHeaders, ok := r.Header["Accept"]; ok {
+		for _, acceptHeader := range acceptHeaders {
+			if strings.Contains(acceptHeader, "application/json") {
+				return true
+			}
+		}
+	}
+
+	return false
 }

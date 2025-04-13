@@ -79,5 +79,6 @@ func RequestInfoToken(ctx context.Context, tok *oauth2.Token, roles ...string) (
 	} else {
 		slog.Debug("infoToken", "user", it.User)
 	}
+	it.Expiry = it.GetExpiry()
 	return it, nil
 }
