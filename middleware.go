@@ -89,7 +89,12 @@ func (cc *CodeCallback) Handler() http.Handler {
 			tf(r.Context(), w, it)
 		}
 
-		ue := getToken(it)
+		ue, ok := it.GetUser()
+		if !ok {
+			http.Error(w, "user not found in api/info result", http.StatusUnauthorized)
+			slog.Info("auth fail, user not found", "infoToken", it)
+			return
+		}
 		_ = authoriz.Signin(ue, w)
 
 		defaultStateStore.Wipe(w, r.FormValue("state"))
@@ -186,25 +191,6 @@ func AuthRequestWithRole(r *http.Request, role ...string) (it *InfoToken, err er
 	}
 
 	return
-}
-
-func getToken(it *InfoToken) *User {
-	user := new(User)
-	if it.Me != nil {
-		user.OID = it.Me.OID
-		user.UID = it.Me.UID
-		user.Name = it.Me.Nickname
-		user.Avatar = it.Me.AvatarPath
-	} else if it.User != nil {
-		user = &it.User.User
-		if len(user.OID) == 0 && len(it.User.Sub) > 0 {
-			user.OID = it.User.Sub
-		}
-	}
-	user.Roles = it.Roles
-
-	user.Refresh()
-	return user
 }
 
 // IsAjax Check if is AJAX Request for json data

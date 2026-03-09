@@ -1,11 +1,6 @@
 package client
 
-// IStaff ...
-type IStaff interface {
-	GetUID() string  // uid
-	GetName() string // nickname
-	GetAvatar() string
-}
+import auth "github.com/liut/simpauth"
 
 // Staff is a retrieved employee struct.
 type Staff struct {
@@ -23,6 +18,23 @@ type Staff struct {
 	EmployeeType   string `json:"etype,omitempty" form:"etitle"`
 	AvatarPath     string `json:"avatarPath,omitempty" form:"avatar"`
 	Provider       string `json:"provider,omitempty"`
+}
+
+func (s Staff) GetOID() string { return s.OID }
+func (s Staff) GetUID() string { return s.UID }
+func (s Staff) GetName() string {
+	if s.Nickname != "" {
+		return s.Nickname
+	}
+	if s.CommonName != "" {
+		return s.CommonName
+	}
+	return s.Surname
+}
+func (s Staff) GetAvatar() string { return s.AvatarPath }
+
+func (s Staff) ToUser() User {
+	return auth.ToUser(s)
 }
 
 type RoleMe map[string]any

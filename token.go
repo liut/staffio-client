@@ -21,6 +21,10 @@ type O2User struct {
 	auth.User
 }
 
+func (ou O2User) ToUser() User {
+	return ou.User
+}
+
 // InfoToken ...
 type InfoToken struct {
 	InfoError
@@ -33,6 +37,33 @@ type InfoToken struct {
 	User         *O2User    `json:"user,omitempty"`
 	Me           *Staff     `json:"me,omitempty"`
 	Roles        auth.Names `json:"group,omitempty"`
+}
+
+// GetUser 从 InfoToken 中提取用户信息。
+// 优先级：Me > User。当两者都为空时返回 false。
+// 会通过 ToUser() 提取基础信息，补充 OID（使用 O2User.Sub）、Roles，并调用 Refresh() 更新缓存字段。
+func (it *InfoToken) GetUser() (*User, bool) {
+	if it.Me == nil && it.User == nil {
+		return nil, false
+	}
+
+	user := new(User)
+	if it.Me != nil {
+		*user = it.Me.ToUser()
+	} else if it.User != nil {
+		*user = it.User.ToUser()
+		if len(user.OID) == 0 && len(it.User.Sub) > 0 {
+			user.OID = it.User.Sub
+		}
+	}
+	user.Roles = it.Roles
+	user.Refresh()
+
+	return user, true
+}
+
+func (it *InfoToken) HasRole(slug string) bool {
+	return it.Roles.Has(slug)
 }
 
 // GetExpiry ...
