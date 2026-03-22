@@ -25,6 +25,8 @@ func (ou O2User) ToUser() User {
 	return ou.User
 }
 
+type O2Token = oauth2.Token
+
 // InfoToken ...
 type InfoToken struct {
 	InfoError
