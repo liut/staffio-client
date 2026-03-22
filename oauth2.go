@@ -110,7 +110,8 @@ type AuthFormData struct {
 	State        string `json:"state"`
 }
 
-// LoginHandler ...
+// LoginHandler handles login requests. For Ajax requests, returns authorization form data;
+// otherwise redirects to the authorization page or displays a login page.
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if IsAjax(r) {
 		state := randToken()

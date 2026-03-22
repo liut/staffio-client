@@ -85,6 +85,8 @@ func (e InfoError) GetError() error {
 	return nil
 }
 
+// RequestInfo calls the info API with the given token and unmarshals the response into obj.
+// The optional parts are joined with "|" and appended to the info URI.
 func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...string) error {
 	ctxEx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 	client := confSgt().Client(ctxEx, tok)
@@ -106,7 +108,7 @@ func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...strin
 	return nil
 }
 
-// RequestInfoToken ...
+// RequestInfoToken requests an InfoToken using the given token and optionally filters by roles.
 func RequestInfoToken(ctx context.Context, tok *oauth2.Token, roles ...string) (*InfoToken, error) {
 	it := new(InfoToken)
 	err := RequestInfo(ctx, tok, it, roles...)

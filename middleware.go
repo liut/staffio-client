@@ -66,16 +66,17 @@ type TokenFunc = func(ctx context.Context, w http.ResponseWriter, it *InfoToken)
 // UserFunc for custom read user
 type UserFunc = func(ctx context.Context, w http.ResponseWriter, user *User)
 
-// CodeCallback ..
+// CodeCallback handles OAuth2 authorization code callback with role checking.
 type CodeCallback struct {
+	// InRoles specifies the roles required for authorization.
 	InRoles []string
-	// When got a infoToken from the provider
+	// OnTokenGot is called after receiving the infoToken from the provider.
 	OnTokenGot TokenFunc
-	// When Signed in
+	// OnSignedIn is called after the user is signed in successfully.
 	OnSignedIn UserFunc
 }
 
-// Handler ...
+// Handler returns an HTTP handler that processes the callback request.
 func (cc *CodeCallback) Handler() http.Handler {
 	hf := func(w http.ResponseWriter, r *http.Request) {
 		it, err := AuthRequestWithRole(r, cc.InRoles...)
@@ -161,6 +162,7 @@ func UidFromToken(tok *oauth2.Token) string {
 
 // TokenFromContext returns a oauth2.Token from the given context if one is present.
 // Returns nil if a oauth2.Token cannot be found.
+// NOTE: This function is only effective for login callbacks processed by AuthCodeCallbackWrap.
 func TokenFromContext(ctx context.Context) *oauth2.Token {
 	if ctx == nil {
 		return nil
