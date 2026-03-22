@@ -28,14 +28,14 @@ func GetPrefix() string {
 
 func init() {
 	prefix = envOrP("PREFIX", "https://staffio.work")
-	infoURI = fixURI(prefix, envOrP("URI_INFO", "info/me"))
+	infoURI = FixURI(prefix, envOrP("URI_INFO", "info/me"))
 }
 
 func confSgt() *oauth2.Config {
 	cOnce.Do(func() {
 		conf2 = &oauth2.Config{Endpoint: oauth2.Endpoint{
-			AuthURL:  fixURI(prefix, envOrP("URI_AUTHORIZE", "authorize")),
-			TokenURL: fixURI(prefix, envOrP("URI_TOKEN", "token")),
+			AuthURL:  FixURI(prefix, envOrP("URI_AUTHORIZE", "authorize")),
+			TokenURL: FixURI(prefix, envOrP("URI_TOKEN", "token")),
 		}}
 		clientID := envOrP("CLIENT_ID", "")
 		clientSecret := envOrP("CLIENT_SECRET", "")
@@ -58,7 +58,7 @@ func envName(k string) string {
 	return envPrefix + "_" + k
 }
 
-func fixURI(pre, s string) string {
+func FixURI(pre, s string) string {
 	if strings.HasPrefix(s, "https:") || strings.HasPrefix(s, "http:") {
 		return s
 	}

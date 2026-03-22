@@ -88,21 +88,27 @@ func (e InfoError) GetError() error {
 // RequestInfo calls the info API with the given token and unmarshals the response into obj.
 // The optional parts are joined with "|" and appended to the info URI.
 func RequestInfo(ctx context.Context, tok *oauth2.Token, obj any, parts ...string) error {
-	ctxEx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
-	client := confSgt().Client(ctxEx, tok)
 	uri := infoURI
 	if len(parts) > 0 {
 		uri = infoURI + "|" + strings.Join(parts, "|")
 	}
-	info, err := client.Get(uri)
+	return RequestWith(ctx, uri, tok, obj)
+}
+
+// RequestWith performs an HTTP GET request to the specified URI with the OAuth2 token
+// and unmarshals the JSON response into obj.
+func RequestWith(ctx context.Context, uri string, tok *oauth2.Token, obj any) error {
+	ctxEx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
+	client := confSgt().Client(ctxEx, tok)
+	resp, err := client.Get(uri)
 	if err != nil {
-		slog.Info("post info fail", "err", err, "uri", "uri")
+		slog.Info("get resp fail", "err", err, "uri", "uri")
 		return err
 	}
-	defer info.Body.Close()
-	err = json.NewDecoder(info.Body).Decode(obj)
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(obj)
 	if err != nil {
-		slog.Info("unmarshal to infoToken fail", "err", err, "sc", info.StatusCode, "uri", uri)
+		slog.Info("unmarshal fail", "err", err, "sc", resp.StatusCode, "uri", uri)
 		return err
 	}
 	return nil
