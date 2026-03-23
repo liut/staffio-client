@@ -11,7 +11,7 @@ jobs:
     name: Vet & Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -24,7 +24,8 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          install-mode: "goinstall"
+          version: v1.64
 
   test:
     name: Test
