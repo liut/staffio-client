@@ -139,5 +139,33 @@ func HandlerShowMe(c *gin.Context) {
 		"me":    user,
 	})
 }
+```
 
+### Making Authenticated API Requests
+
+```go
+token := &staffio.O2Token{
+	AccessToken: accessToken,
+	TokenType:   "Bearer",
+})
+// RequestInfoToken gets user info with optional role filtering
+infoToken, err := staffio.RequestInfoToken(ctx, token, "admin")
+if err != nil {
+    log.Fatal(err)
+}
+user, ok := infoToken.GetUser()
+if ok {
+    fmt.Println(user.Name)
+}
+
+// RequestWith makes authenticated GET requests to any URI
+var result struct {
+    ID    string `json:"id"`
+    Title string `json:"title"`
+}
+err = staffio.RequestWith(ctx, "https://api.example.com/items/1", token, &result)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(result.Title)
 ```
