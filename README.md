@@ -1,32 +1,42 @@
 Staffio client and general OAuth2 client
 ===
 
-settings with environment
----
-```plan
+## Features
+
+- **OAuth2 Authorization Code Flow** - Full OAuth2 authentication with Staffio identity provider
+- **Session Management** - Cookie-based sessions with configurable name/path/domain
+- **Role-Based Access Control** - Role verification during authentication callbacks
+- **Token Refresh** - Automatic token refresh support
+- **Multiple Auth Mechanisms** - Cookie, Header, or middleware-based authentication
+- **User Info Extraction** - Extract user from token response with priority handling (Me > User)
+- **CSRF Protection** - State token management for OAuth security
+- **Flexible Configuration** - Environment variables or runtime configuration
+- **AJAX Support** - Detects AJAX requests and returns appropriate responses
+
+## Environment Variables
+
+```sh
+# Required
 OAUTH_CLIENT_ID=
 OAUTH_CLIENT_SECRET=
-OAUTH_PREFIX=https://staffio.work
+OAUTH_PREFIX=https://staffio.work       # Staffio service URL
+
+# Optional
 OAUTH_URI_AUTHORIZE=/authorize
 OAUTH_URI_TOKEN=/token
 OAUTH_URI_INFO=/info/me
 OAUTH_REDIRECT_URL=/auth/callback
-OAUTH_SCOPES='openid'
-
+OAUTH_SCOPES=openid
+AUTH_COOKIE_NAME=_user                  # Session cookie name
+AUTH_COOKIE_PATH=/
+AUTH_COOKIE_DOMAIN=
 ```
 
-User struct
----
-```go
-type User struct {
-	OID       string `json:"oid,omitempty"` // pk id, objectID
-	UID       string `json:"uid"`           // username, login name
-	Name      string `json:"name"`          // nickname, realname, display name
-	Avatar    string `json:"avatar,omitempty"`
-}
-```
+## User Type
 
-Example for staffio SP
+`User` is a type alias for `auth.User` from the simpauth package. See [simpauth](https://github.com/liut/simpauth) for details.
+
+## Example
 ---
 
 ```go
