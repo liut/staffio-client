@@ -15,12 +15,22 @@ import (
 
 // UserInfo for OAuth2
 type O2User struct {
+	auth.User
+
 	// Subject - Identifier for the User at the `SP`.
 	// 主题 - `SP`对用户的标识符。
 	Sub string `json:"sub,omitempty"`
-	auth.User
+
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
 }
 
+func (ou O2User) GetEmail() string {
+	return ou.Email
+}
+func (ou O2User) GetPhone() string {
+	return ou.Phone
+}
 func (ou O2User) ToUser() User {
 	return ou.User
 }
@@ -39,6 +49,7 @@ type InfoToken struct {
 	User         *O2User    `json:"user,omitempty"`
 	Me           *Staff     `json:"me,omitempty"`
 	Roles        auth.Names `json:"group,omitempty"`
+	Meta         Meta       `json:"meta,omitempty"`
 }
 
 // GetUser 从 InfoToken 中提取用户信息。
