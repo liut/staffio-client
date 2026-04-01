@@ -32,9 +32,18 @@ func (s Staff) GetName() string {
 	return s.Surname
 }
 func (s Staff) GetAvatar() string { return s.AvatarPath }
+func (s Staff) GetEmail() string  { return s.Email }
+func (s Staff) GetPhone() string  { return s.Mobile }
 
 func (s Staff) ToUser() User {
 	return auth.ToUser(s)
+}
+
+func (s Staff) ToO2User() (ou O2User) {
+	ou.User = auth.ToUser(s)
+	ou.Email = s.GetEmail()
+	ou.Phone = s.GetPhone()
+	return
 }
 
 type RoleMe map[string]any

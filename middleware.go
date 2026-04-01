@@ -64,7 +64,7 @@ func AuthCodeCallback(roles ...string) http.Handler {
 type TokenFunc = func(ctx context.Context, w http.ResponseWriter, it *InfoToken)
 
 // UserFunc for custom read user
-type UserFunc = func(ctx context.Context, w http.ResponseWriter, user *User)
+type UserFunc = func(ctx context.Context, w http.ResponseWriter, user *O2User)
 
 // CodeCallback handles OAuth2 authorization code callback with role checking.
 type CodeCallback struct {

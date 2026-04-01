@@ -3,7 +3,7 @@ module github.com/liut/staffio-client
 go 1.25.0
 
 require (
-	github.com/liut/simpauth v0.1.18
+	github.com/liut/simpauth v0.1.20
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.36.0
 )

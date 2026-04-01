@@ -13,6 +13,13 @@ import (
 	auth "github.com/liut/simpauth"
 )
 
+type IUser interface {
+	auth.IUser
+
+	GetEmail() string
+	GetPhone() string
+}
+
 // UserInfo for OAuth2
 type O2User struct {
 	auth.User
@@ -31,6 +38,12 @@ func (ou O2User) GetEmail() string {
 func (ou O2User) GetPhone() string {
 	return ou.Phone
 }
+
+var (
+	_ IUser = (*O2User)(nil)
+	_ IUser = (*Staff)(nil)
+)
+
 func (ou O2User) ToUser() User {
 	return ou.User
 }
@@ -55,16 +68,16 @@ type InfoToken struct {
 // GetUser 从 InfoToken 中提取用户信息。
 // 优先级：Me > User。当两者都为空时返回 false。
 // 会通过 ToUser() 提取基础信息，补充 OID（使用 O2User.Sub）、Roles，并调用 Refresh() 更新缓存字段。
-func (it *InfoToken) GetUser() (*User, bool) {
+func (it *InfoToken) GetUser() (*O2User, bool) {
 	if it.Me == nil && it.User == nil {
 		return nil, false
 	}
 
-	user := new(User)
+	user := new(O2User)
 	if it.Me != nil {
-		*user = it.Me.ToUser()
+		*user = it.Me.ToO2User()
 	} else if it.User != nil {
-		*user = it.User.ToUser()
+		user = it.User
 		if len(user.OID) == 0 && len(it.User.Sub) > 0 {
 			user.OID = it.User.Sub
 		}
