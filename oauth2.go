@@ -95,19 +95,41 @@ func SetupScopes(conf *oauth2.Config, scopes []string) {
 func LoginStart(w http.ResponseWriter, r *http.Request) string {
 	state := randToken()
 	_ = defaultStateStore.Save(w, state)
+	verifier := newPKCEVerifier(state)
 
-	if strings.HasPrefix(confSgt().RedirectURL, "/") {
-		return confSgt().AuthCodeURL(state, getAuthCodeOption(r))
+	cc := confSgt()
+	return cc.AuthCodeURL(state, authCodeOptions(cc.RedirectURL, r, verifier)...)
+}
+
+// newPKCEVerifier generates a code_verifier and stores it under state for the
+// upcoming token exchange. A save failure is logged but does not block the
+// redirect; the callback then ends with an explicit verifier-missing error.
+func newPKCEVerifier(state string) string {
+	verifier := oauth2.GenerateVerifier()
+	if err := defaultVerifierStore.Save(state, verifier); err != nil {
+		slog.Info("save code_verifier fail", "state", state, "err", err)
 	}
-	return confSgt().AuthCodeURL(state)
+	return verifier
+}
+
+// authCodeOptions builds the authorization request options: the S256 challenge,
+// plus an absolute redirect_uri when the configured one is a relative path.
+func authCodeOptions(redirectURL string, r *http.Request, verifier string) []oauth2.AuthCodeOption {
+	opts := []oauth2.AuthCodeOption{oauth2.S256ChallengeOption(verifier)}
+	if strings.HasPrefix(redirectURL, "/") {
+		opts = append(opts, oauth2.SetAuthURLParam("redirect_uri", resolveRedirectURI(redirectURL, r)))
+	}
+	return opts
 }
 
 type AuthFormData struct {
-	ResponseType string `json:"response_type"`
-	ClientID     string `json:"client_id"`
-	RedirectURI  string `json:"redirect_uri"`
-	Scope        string `json:"scope"`
-	State        string `json:"state"`
+	ResponseType        string `json:"response_type"`
+	ClientID            string `json:"client_id"`
+	RedirectURI         string `json:"redirect_uri"`
+	Scope               string `json:"scope"`
+	State               string `json:"state"`
+	CodeChallenge       string `json:"code_challenge"`
+	CodeChallengeMethod string `json:"code_challenge_method"`
 }
 
 // LoginHandler handles login requests. For Ajax requests, returns authorization form data;
@@ -116,13 +138,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if IsAjax(r) {
 		state := randToken()
 		_ = defaultStateStore.Save(w, state)
+		verifier := newPKCEVerifier(state)
 		cc := confSgt()
 		data := AuthFormData{
-			ResponseType: "code",
-			ClientID:     cc.ClientID,
-			RedirectURI:  getRedirectURI(r),
-			Scope:        strings.Join(cc.Scopes, " "),
-			State:        state,
+			ResponseType:        "code",
+			ClientID:            cc.ClientID,
+			RedirectURI:         getRedirectURI(r),
+			Scope:               strings.Join(cc.Scopes, " "),
+			State:               state,
+			CodeChallenge:       oauth2.S256ChallengeFromVerifier(verifier),
+			CodeChallengeMethod: "S256",
 		}
 		json.NewEncoder(w).Encode(map[string]any{"data": data}) //nolint
 		return
@@ -162,10 +187,14 @@ func getAuthCodeOption(r *http.Request) oauth2.AuthCodeOption {
 }
 
 func getRedirectURI(r *http.Request) string {
-	if strings.HasPrefix(confSgt().RedirectURL, "/") {
-		return getScheme(r) + "://" + r.Host + confSgt().RedirectURL
+	return resolveRedirectURI(confSgt().RedirectURL, r)
+}
+
+func resolveRedirectURI(redirectURL string, r *http.Request) string {
+	if strings.HasPrefix(redirectURL, "/") {
+		return getScheme(r) + "://" + r.Host + redirectURL
 	}
-	return confSgt().RedirectURL
+	return redirectURL
 }
 
 func getScheme(r *http.Request) string {

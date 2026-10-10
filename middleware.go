@@ -136,15 +136,23 @@ func AuthCodeCallbackWrap(next http.Handler) http.Handler {
 			http.Error(w, "invalid state: "+state, http.StatusBadRequest)
 			return
 		}
+		verifier := defaultVerifierStore.Load(state)
+		if verifier == "" {
+			slog.Info("verifier not found", "state", state, "uri", r.RequestURI)
+			http.Error(w, "code_verifier not found for state: "+state, http.StatusBadRequest)
+			return
+		}
 		ctx := r.Context()
 		ctxEx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 
-		tok, err := confSgt().Exchange(ctxEx, r.FormValue("code"), getAuthCodeOption(r))
+		tok, err := confSgt().Exchange(ctxEx, r.FormValue("code"),
+			getAuthCodeOption(r), oauth2.VerifierOption(verifier))
 		if err != nil {
 			slog.Info("oauth2 exchange fail", "err", err, "euri", confSgt().Endpoint.TokenURL)
 			http.Error(w, "oauth2 exchange fail: "+err.Error(), http.StatusBadRequest)
 			return
 		}
+		defaultVerifierStore.Wipe(state)
 
 		ctx = context.WithValue(ctx, TokenKey, tok)
 		next.ServeHTTP(w, r.WithContext(ctx))
