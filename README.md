@@ -7,6 +7,7 @@ Staffio client and general OAuth2 client
 - **Session Management** - Cookie-based sessions with configurable name/path/domain
 - **Role-Based Access Control** - Role verification during authentication callbacks
 - **Token Refresh** - Automatic token refresh support
+- **PKCE (S256)** - Authorization requests carry a `code_challenge`; the matching `code_verifier` is bound to the state and consumed on exchange
 - **Multiple Auth Mechanisms** - Cookie, Header, or middleware-based authentication
 - **User Info Extraction** - Extract user from token response with priority handling (Me > User)
 - **CSRF Protection** - State token management for OAuth security
@@ -35,6 +36,22 @@ AUTH_COOKIE_DOMAIN=
 ## User Type
 
 `User` is a type alias for `auth.User` from the simpauth package. See [simpauth](https://github.com/liut/simpauth) for details.
+
+## PKCE
+
+Authorization requests always carry `code_challenge` with `code_challenge_method=S256`, and the
+matching `code_verifier` is stored per `state` and consumed once the token exchange succeeds. The
+method is fixed to `S256`; there is no toggle.
+
+The verifier is kept in an in-memory store by default. Deployments with multiple instances or
+frequent restarts must register a shared implementation before serving logins:
+
+```go
+staffio.RegisterVerifierStore(sharedStore) // Save(state, verifier) / Load(state) / Wipe(state)
+```
+
+When login is served through the AJAX form branch, `AuthFormData` also returns `code_challenge` and
+`code_challenge_method`; forward both to the provider's authorization endpoint unchanged.
 
 ## Example
 ---
