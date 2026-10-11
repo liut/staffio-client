@@ -43,8 +43,10 @@ Authorization requests always carry `code_challenge` with `code_challenge_method
 matching `code_verifier` is stored per `state` and consumed once the token exchange succeeds. The
 method is fixed to `S256`; there is no toggle.
 
-The verifier is kept in an in-memory store by default. Deployments with multiple instances or
-frequent restarts must register a shared implementation before serving logins:
+The verifier is kept in an in-memory store by default, bounded by the provider's authorization code
+lifetime (15 minutes) with a fixed entry cap that evicts the oldest pending login first. Deployments
+with multiple instances or frequent restarts must register a shared implementation before serving
+logins:
 
 ```go
 staffio.RegisterVerifierStore(sharedStore) // Save(state, verifier) / Load(state) / Wipe(state)

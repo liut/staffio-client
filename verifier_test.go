@@ -63,3 +63,17 @@ func TestVerifierStore_Concurrent(t *testing.T) {
 		assert.Equal(t, "", vs.Load(fmt.Sprintf("state-%d", i)))
 	}
 }
+
+func TestVerifierStore_MaxItems(t *testing.T) {
+	vs := newVerifierStoreWithCap(time.Minute, 3)
+
+	for i := range 4 {
+		require.NoError(t, vs.Save(fmt.Sprintf("state-%d", i), fmt.Sprintf("verifier-%d", i)))
+		// 固定生存期下按写入顺序淘汰，写入之间需要可区分的时间戳
+		time.Sleep(time.Millisecond)
+	}
+
+	assert.Len(t, vs.items, 3)
+	assert.Equal(t, "", vs.Load("state-0"), "the oldest entry must be evicted first")
+	assert.Equal(t, "verifier-3", vs.Load("state-3"))
+}
